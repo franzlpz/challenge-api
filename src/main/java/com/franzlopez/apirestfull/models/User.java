@@ -8,6 +8,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
+import java.util.List;
 
 
 @Entity
@@ -37,6 +38,8 @@ public class User implements UserDetails {
     @Column(name = "isactive")
     private Boolean isActive;
 
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY)
+    private List<Phone> phones;
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -71,5 +74,12 @@ public class User implements UserDetails {
     @Override
     public boolean isEnabled() {
         return true;
+    }
+
+    public void setInitialValues(){
+        this.isActive = Boolean.TRUE;
+        this.created = LocalDateTime.now();
+        this.modified = LocalDateTime.now();
+        this.lastLogin = LocalDateTime.now();
     }
 }

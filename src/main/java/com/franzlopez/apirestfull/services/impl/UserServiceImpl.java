@@ -13,6 +13,8 @@ import com.franzlopez.apirestfull.repositories.TokenRepository;
 import com.franzlopez.apirestfull.repositories.UserRepository;
 import com.franzlopez.apirestfull.services.UserService;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -33,22 +35,15 @@ public class UserServiceImpl implements UserService {
     private final TokenRepository tokenRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final AuthenticationManager authenticationManager;
+
+    @Autowired
+    private ModelMapper mapper;
 
     @Override
     @Transactional(readOnly = true)
     public Optional<UserResponseDto> findById(String id) {
         return userRepository.findById(id)
-                .map( user -> UserResponseDto.builder()
-                .id(user.getId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .created(user.getCreated().toString())
-                .modified(user.getModified().toString())
-                .lastLogin(user.getLastLogin().toString())
-                .token(user.getToken())
-                .isActive(user.getIsActive())
-                .build());
+                .map( user -> mapper.map(user, UserResponseDto.class));
 
     }
 
@@ -57,34 +52,23 @@ public class UserServiceImpl implements UserService {
     public List<UserResponseDto> findAll() {
         List<User> users = (List<User>) userRepository.findAll();
         return users.stream()
-                .map( user -> UserResponseDto.builder()
-                        .id(user.getId())
-                        .name(user.getName())
-                        .email(user.getEmail())
-                        .created(user.getCreated().toString())
-                        .modified(user.getModified().toString())
-                        .lastLogin(user.getLastLogin().toString())
-                        .token(user.getToken())
-                        .isActive(user.getIsActive())
-                        .build())
+                .map( user -> mapper.map(user, UserResponseDto.class))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional
     public Optional<UserResponseDto> save(UserRequestDto requestDto) {
-        UID uid = new UID();
-        LocalDateTime now = LocalDateTime.now();
 
         User user = User.builder()
-                .name(requestDto.getName())
-                .email(requestDto.getEmail())
-                .password(passwordEncoder.encode(requestDto.getPassword()))
-                .created(now)
-                .modified(now)
-                .lastLogin(now)
-                .isActive(Boolean.TRUE)
-                .build();
+        .name(requestDto.getName())
+        .email(requestDto.getEmail())
+        .password(passwordEncoder.encode(requestDto.getPassword()))
+        .build();
+
+        user.setInitialValues();
+
+
         var jwtToken = jwtService.generateToken( user);
         if (!validateEmail(user.getEmail())){
             return Optional.empty();
@@ -95,16 +79,7 @@ public class UserServiceImpl implements UserService {
         registerPhones(userResult, requestDto.getPhones());
         saveUserToken(userResult, jwtToken);
 
-        return Optional.of(UserResponseDto.builder()
-                .id(userResult.getId())
-                .name(userResult.getName())
-                .email(userResult.getEmail())
-                .created(userResult.getCreated().toString())
-                .modified(userResult.getModified().toString())
-                .lastLogin(userResult.getLastLogin().toString())
-                .token(userResult.getToken())
-                .isActive(userResult.getIsActive())
-                .build());
+        return Optional.of(mapper.map(userResult, UserResponseDto.class));
 
     }
 
@@ -115,14 +90,13 @@ public class UserServiceImpl implements UserService {
     }
 
     private void registerPhones(User user, List<PhoneDto> phones) {
-        phones.forEach( dto -> {
-            phoneRepository.save(Phone.builder()
-                    .userId(user.getId())
-                    .number(dto.getNumber())
-                    .cityCode(dto.getCityCode())
-                    .countryCode(dto.getCountryCode())
-                    .build());
-        });
+        phoneRepository.saveAll(phones.stream()
+            .map(dto -> {
+                Phone phone = mapper.map(dto, Phone.class);
+                phone.setUser(user);
+                return phone;
+            })
+            .collect(Collectors.toList()));
     }
 
     private void saveUserToken(User user, String jwtToken) {

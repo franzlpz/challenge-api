@@ -4,6 +4,7 @@ import com.franzlopez.apirestfull.config.auditing.ApplicationAuditAware;
 import com.franzlopez.apirestfull.config.validation.ValidationConfig;
 import com.franzlopez.apirestfull.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.modelmapper.ModelMapper;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +22,11 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @RequiredArgsConstructor
 public class ApplicationConfig {
+
+    @Bean
+    public ModelMapper modelMapper() {
+        return new ModelMapper();
+    }
 
     private final UserRepository repository;
 

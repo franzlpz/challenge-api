@@ -20,6 +20,6 @@ public class Phone {
     private String cityCode;
     @Column(name = "country_code")
     private String countryCode;
-    @Column(name = "user_id")
-    private String userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    public User user;
 }
