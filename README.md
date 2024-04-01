@@ -1,4 +1,4 @@
-# franzlopez-challenge
+# Challenge
 API RESTFull para usuario
 
 # Diagrama de solución
@@ -14,13 +14,15 @@ http://localhost:8082/h2-console/
 
 
 # Probar registro de usuario:
+consideraciones: Para el password deberá contener como mínimo 8 carácteres, empezar por una mayúscula, tener número y carácteres especiales.
+
 curl --location 'http://localhost:8082/api/v1/users' \
 --header 'Content-Type: application/json' \
 --header 'Cookie: JSESSIONID=F3665B578842CF25FCF74251234FB707' \
 --data-raw '{
 "name": "Juan Rodriguez",
 "email": "juan2@rodriguez.org",
-"password": "hunter2",
+"password": "Foreigner127#",
 "phones": [
     {
     "number": "1234567",
@@ -33,3 +35,5 @@ curl --location 'http://localhost:8082/api/v1/users' \
  # Busqueda de usuario: Cambiar "c6b59003-0617-4988-9fa1-a36dfb457325" por generador en el paso anterior
  curl --location 'http://localhost:8082/api/v1/users/c6b59003-0617-4988-9fa1-a36dfb457325' \
 --header 'Cookie: JSESSIONID=F3665B578842CF25FCF74251234FB707'
+
+
